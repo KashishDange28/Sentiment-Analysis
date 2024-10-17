@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Tool</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #007bff, #6c757d);  /* Gradient from blue to gray */
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+        .container {
+            margin-top: 60px;
+            max-width: 700px;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-left: 5px solid #007bff;
+            border-radius: 5px;
+        }
+        .pie-chart {
+            margin-top: 40px;
+        }
+        .review-list {
+            display: none;
+            margin-top: 20px;
+        }
+        /* Add subtle hover effect on buttons */
+        .btn-link {
+            color: #007bff;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .btn-link:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Analysis Tool</h1>
+
+        <!-- Text Form -->
+        <form id="textForm" class="mb-4">
+            <div class="form-group">
+                <label for="user_input">Enter text for sentiment analysis:</label>
+                <input type="text" id="user_input" name="user_input" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Analyze Text</button>
+        </form>
+
+        <!-- Sentiment Results -->
+        <div class="result">
+            <p>Sentiment: <strong><span id="text_result"></span></strong></p>
+            <p>Sentiment Score: <strong><span id="text_score"></span></strong></p>
+        </div>
+
+        <!-- CSV Upload Form -->
+        <form id="csvForm" enctype="multipart/form-data" class="mt-4">
+            <div class="form-group">
+                <label for="file">Upload CSV (containing reviews):</label>
+                <input type="file" id="file" name="file" class="form-control" accept=".csv" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Analyze CSV</button>
+        </form>
+
+        <!-- CSV Results -->
+        <div class="result">
+            <p>Positive Reviews: <strong><span id="positive_count"></span></strong> 
+                <button id="view_positive" class="btn btn-link">View List</button>
+            </p>
+            <p>Negative Reviews: <strong><span id="negative_count"></span></strong> 
+                <button id="view_negative" class="btn btn-link">View List</button>
+            </p>
+        </div>
+
+        <!-- Review Lists -->
+        <div class="review-list" id="positive_reviews_list"></div>
+        <div class="review-list" id="negative_reviews_list"></div>
+
+        <!-- Pie Chart -->
+        <div class="pie-chart" id="pie_chart"></div>
+    </div>
+
+    <!-- Plotly.js for Pie Charts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom Script -->
+    <script>
+        $('#textForm').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '/analyze',
+                data: { user_input: $('#user_input').val() },
+                success: function (data) {
+                    $('#text_result').text(data.result);
+                    $('#text_score').text(data.score);  // Display the sentiment score
+                }
+            });
+        });
+
+        $('#csvForm').submit(function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                type: 'POST',
+                url: '/analyze_csv',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $('#positive_count').text(data.positive);
+                    $('#negative_count').text(data.negative);
+                    $('#pie_chart').html('');
+
+                    Plotly.newPlot('pie_chart', JSON.parse(data.pie_chart).data, JSON.parse(data.pie_chart).layout);
+
+                    $('#view_positive').click(function () {
+                        $('#positive_reviews_list').html(data.positive_reviews.join('<br>')).toggle();
+                    });
+
+                    $('#view_negative').click(function () {
+                        $('#negative_reviews_list').html(data.negative_reviews.join('<br>')).toggle();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
