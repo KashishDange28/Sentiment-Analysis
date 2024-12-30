@@ -1,6 +1,6 @@
 def analyze_sentiment(text):
-    positive_keywords = ['great', 'fantastic', 'love', 'excellent', 'satisfied','good','great']
-    negative_keywords = ['terrible', 'bad', 'broke', 'not worth', 'hate','bad']
+    positive_keywords = ['great', 'fantastic', 'love', 'excellent', 'satisfied','good','great', 'nice','kind']
+    negative_keywords = ['terrible', 'bad', 'broke', 'not worth', 'hate','bad','not good']
 
     text_lower = text.lower()
 
